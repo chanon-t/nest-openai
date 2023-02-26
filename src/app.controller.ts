@@ -2,7 +2,7 @@ import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { AppService } from './app.service';
 import { LineService } from './modules/line/line.service';
 import { OpenAIService } from './modules/openai/openai.service';
-import { translateText } from './utils/translate';
+import { detectLanguage, translateText } from './utils/translate';
 
 @Controller()
 export class AppController {
@@ -14,7 +14,7 @@ export class AppController {
 
   @Get('version')
   async getHello(@Query('text') text: string): Promise<string> {
-    const result = await translateText(text);
+    const result = await detectLanguage(text);
     return this.appService.getVersion() + ', ' + result;
   }
 
@@ -31,10 +31,18 @@ export class AppController {
         //   'Human:',
         //   'AI:',
         // ]);
-        const prompt = `${message.text}###`;
-        const responseText = await this.openAIService.createCompletion(prompt, [
+        let text = message.text;
+        const lang = await detectLanguage(text);
+        if (lang === 'th') {
+          text = await translateText(text);
+        }
+        const prompt = `${text}###`;
+        let responseText = await this.openAIService.createCompletion(prompt, [
           '###',
         ]);
+        if (lang === 'th') {
+          responseText = await translateText(text, 'th');
+        }
         await this.lineService.replyMessage(replyToken, responseText.trim());
       }
     }
