@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { AppService } from './app.service';
 import { LineService } from './modules/line/line.service';
 import { OpenAIService } from './modules/openai/openai.service';
+import { translateText } from './utils/translate';
 
 @Controller()
 export class AppController {
@@ -11,9 +12,10 @@ export class AppController {
     private readonly lineService: LineService,
   ) {}
 
-  @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  @Get('version')
+  async getHello(@Query('text') text: string): Promise<string> {
+    const result = await translateText(text);
+    return this.appService.getVersion() + ', ' + result;
   }
 
   @Post('completions')
