@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { AppService } from './app.service';
 import { LineService } from './modules/line/line.service';
 import { OpenAIService } from './modules/openai/openai.service';
@@ -13,9 +13,8 @@ export class AppController {
   ) {}
 
   @Get('version')
-  async getHello(@Query('text') text: string): Promise<string> {
-    const result = await detectLanguage(text);
-    return this.appService.getVersion() + ', ' + result;
+  async getHello(): Promise<string> {
+    return this.appService.getVersion();
   }
 
   @Post('completions')
@@ -41,7 +40,7 @@ export class AppController {
           '###',
         ]);
         if (lang === 'th') {
-          responseText = await translateText(text, 'th');
+          responseText = await translateText(responseText, 'th');
         }
         await this.lineService.replyMessage(replyToken, responseText.trim());
       }
